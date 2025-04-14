@@ -5,22 +5,13 @@ def calcule_prochaine_configuration(automate):
     """
     Calcule la prochaine configuration de l'automate en appliquant les règles de transition
     sur chaque cellule de l'automate, en tenant compte des cellules voisines (gauche et droite).
-
-    Pour chaque cellule de la configuration actuelle, l'automate applique la fonction de transition
-    basée sur son état actuel et ceux de ses voisins immédiats (gauche, centre et droite). Une nouvelle
-    configuration est générée et l'automate met à jour son état.
-
-    Args:
-        automate (Automate_cellulaire): L'automate dont on doit calculer la prochaine configuration.
-
-    Returns:
-        Configuration: La nouvelle configuration calculée de l'automate.
     """
+
     ancienne_configuration = automate.configuration  # Récupère la configuration actuelle
     nouvelle_configuration = Configuration([], automate.symbol_vide)  # Crée une nouvelle configuration vide
 
-    # Étendre de 1 cellule à gauche et à droite pour couvrir les bords
-    for i in range(ancienne_configuration.decalage - 1, ancienne_configuration.decalage + len(ancienne_configuration.cellules) + 1):
+    # Parcours des cellules de la configuration actuelle sans ajouter de bord
+    for i in range(ancienne_configuration.decalage, ancienne_configuration.decalage + len(ancienne_configuration.cellules)):
         gauche = ancienne_configuration.get(i - 1)  # État de la cellule à gauche
         centre = ancienne_configuration.get(i)    # État de la cellule actuelle
         droite = ancienne_configuration.get(i + 1) # État de la cellule à droite
@@ -30,6 +21,7 @@ def calcule_prochaine_configuration(automate):
     # Met à jour la configuration de l'automate avec la nouvelle configuration calculée
     automate.configuration = nouvelle_configuration
     return nouvelle_configuration  # Retourne la nouvelle configuration
+
 
 
 

@@ -28,52 +28,40 @@ def extension_paterne(paterne, espace_etat):
 
 
 def lecture_automate(chemin_acces, mot_entre, symbol_vide):
-    """
-    Lit un fichier de définition d'un automate cellulaire et construit l'automate 
-    correspondant avec une configuration initiale donnée.
+    transitions_brutes = []  # stocke temporairement les transitions à traiter
+    espace_etat = set()      # ensemble des états
 
-    Le fichier doit contenir des transitions sous la forme 'gauche centre droite -> nouvel état'.
-    Chaque transition est ajoutée à une fonction de transition pour l'automate.
-    
-    Args:
-        chemin_acces (str): Chemin vers le fichier contenant la définition des transitions de l'automate.
-        mot_entre (str): Mot d'entrée initial représentant l'état de l'automate sous forme de chaîne de caractères.
-        symbol_vide (str): Symbole représentant les cellules vides (par défaut, en dehors de la configuration définie).
-
-    Returns:
-        Automate_cellulaire: Un objet représentant l'automate avec sa fonction de transition et sa configuration initiale.
-    """
-    fonction_transition = {}  # Dictionnaire pour stocker la fonction de transition
-    espace_etat = set()       # Ensemble des états possibles dans l'automate
-
-    # Ouverture et lecture du fichier de définitions de transitions
+    # Première passe : collecter tous les états
     with open(chemin_acces, 'r') as fichier:
         for ligne in fichier:
             if '->' not in ligne:
-                continue  # Ignore les lignes qui ne définissent pas de transition
+                continue
 
-            # Séparation de la ligne en un modèle de transition et un résultat
             lhs, rhs = ligne.strip().split('->')
-            paterne = tuple(s.strip() for s in lhs.strip().split())  # Modèle (gauche, centre, droite)
-            resultat = rhs.strip()  # Résultat de la transition (nouvel état)
+            paterne = tuple(s.strip() for s in lhs.strip().split())
+            resultat = rhs.strip()
 
-            # Mise à jour de l'ensemble des états possibles en fonction du modèle
+            # Stocke la ligne pour la deuxième passe
+            transitions_brutes.append((paterne, resultat))
+
+            # Met à jour l’ensemble des symboles
             espace_etat.update(s for s in paterne if s != '*')
-            espace_etat.add(resultat)  # On ajoute aussi le résultat à l'ensemble des états possibles
+            espace_etat.add(resultat)
 
-            # Expansion si `*` est présent dans le modèle
-            for extension in extension_paterne(paterne, espace_etat):
-                fonction_transition[extension] = resultat  # On ajoute la transition au dictionnaire
+    # Deuxième passe : création de la fonction de transition
+    fonction_transition = {}
+    for paterne, resultat in transitions_brutes:
+        for extension in extension_paterne(paterne, espace_etat):
+            fonction_transition[extension] = resultat
 
-    # Création de l'automate avec la fonction de transition et la configuration initiale
+    # Création de l’automate avec config initiale
     automate = Automate_cellulaire(
         espace_etat=espace_etat,
         fonction_transition=fonction_transition,
         symbol_vide=symbol_vide
     )
 
-    # Initialisation de la configuration de l'automate avec le mot d'entrée
     config = Configuration(list(mot_entre), symbol_vide=symbol_vide)
-    automate.configuration = config  # On garde la configuration dans l'automate
+    automate.configuration = config
 
-    return automate  # Retourne l'automate complet
+    return automate

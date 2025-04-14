@@ -39,7 +39,11 @@ class Automate_cellulaire:
             str: nouvel état après application de la règle de transition,
                  ou le symbol_vide si le triplet n'est pas défini.
         """
-        return self.fonction_transition.get((gauche, centre, droite), self.symbol_vide)
+        transition = self.fonction_transition.get((gauche, centre, droite))
+        if transition is None:
+            return self.symbol_vide  # Retourne symbol_vide si la transition n'est pas définie
+        return transition
+
 
 
 class Configuration:
