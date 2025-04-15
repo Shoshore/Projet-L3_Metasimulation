@@ -46,79 +46,64 @@ class Automate_cellulaire:
 
 
 
-class Configuration:
+class MachineTuring:
     """
-    Représente une configuration unidimensionnelle de cellules pour un automate cellulaire.
+    Représente une machine de Turing à un ruban.
 
     Attributs :
-        cellules (list): Liste des états des cellules.
-        symbol_vide (str): Symbole par défaut pour les cellules en dehors de la configuration connue.
-        decalage (int): Indice logique de la cellule d'indice 0 dans la liste `cellules`.
-
-    Méthodes :
-        get(index): Retourne l'état de la cellule à l'indice donné (même hors des bornes).
-        set(index, valeur): Modifie ou étend la configuration pour affecter l'état à l'indice donné.
-        __str__(): Retourne une représentation en chaîne des cellules (utile pour l'affichage).
+        états (set) : Ensemble des états possibles.
+        symboles (set) : Alphabet de travail (ex: {'0', '1', '□'}).
+        état_initial (str) : État de départ.
+        états_acceptation (set) : États d'acceptation.
+        transitions (dict) : Dictionnaire des transitions.
+            Clé : (état, symbole), Valeur : (nouvel état, symbole à écrire, direction 'G' ou 'D')
+        configuration (ConfigurationTuring) : Configuration actuelle (bande, tête, état).
     """
 
-    def __init__(self, état_initiale, symbol_vide):
-        # Liste des états des cellules dans la configuration initiale (ex: ["0", "0", "1", "0"])
-        self.cellules = list(état_initiale)
+    def __init__(self, états, symboles, état_initial, états_acceptation, transitions, configuration):
+        self.états = états
+        self.symboles = symboles
+        self.état_initial = état_initial
+        self.états_acceptation = états_acceptation
+        self.transitions = transitions  # { (etat, symbole): (etat_suivant, symbole_écrit, direction) }
+        self.configuration = configuration  # instance de ConfigurationTuring
 
-        # Symbole par défaut utilisé si on demande une cellule hors des bornes (ex: "0")
-        self.symbol_vide = symbol_vide
+    
 
-        # decalage logique : correspond à l'indice réel de la première cellule
-        # Utile quand on veut étendre la configuration vers la gauche
-        self.decalage = 0
+class MachineTuring:
+    """
+    Représente une machine de Turing à une bande.
 
-    def get(self, index):
-        """
-        Retourne l'état de la cellule à une position donnée.
+    Attributs :
+        états (set) : Ensemble des états possibles (ex: {"q0", "q1", "qf"}).
+        alphabet (set) : Alphabet de travail (ex: {"0", "1", "□"}).
+        état_initial (str) : État de départ de la machine (ex: "q0").
+        état_final (str) : État d’acceptation/halting (ex: "qf").
+        transitions (dict) : Fonction de transition :
+            clé : (état, symbole_lu)
+            valeur : (nouvel_état, symbole_écrit, direction)
+        bande (list) : Contenu actuel de la bande.
+        tête (int) : Position actuelle de la tête de lecture/écriture.
+        état_courant (str) : État actuel de la machine.
+    """
 
-        Si l'index est hors des limites de la configuration actuelle,
-        retourne le symbole vide (symbol_vide).
+    def __init__(self, états, alphabet, état_initial, état_final, transitions, bande_initiale):
+        self.états = états
+        self.alphabet = alphabet
+        self.état_initial = état_initial
+        self.état_final = état_final
+        self.transitions = transitions  # Dictionnaire : (état, symbole_lu) → (nouvel_état, symbole_écrit, direction)
+        self.bande = list(bande_initiale)  # Bande initiale sous forme de liste de symboles
+        self.tête = 0  # Position de départ
+        self.état_courant = état_initial
 
-        Args:
-            index (int): Position logique de la cellule
-
-        Returns:
-            str: État de la cellule
-        """
-        i = index - self.decalage
-        if 0 <= i < len(self.cellules):
-            return self.cellules[i]
-        else:
-            return self.symbol_vide
-
-    def set(self, index, valeur):
-        """
-        Modifie la valeur de la cellule à l'indice donné.
-        Étend la configuration à gauche ou à droite si besoin.
-
-        Args:
-            index (int): Position logique de la cellule
-            valeur (str): Nouvel état de la cellule
-        """
-        i = index - self.decalage
-
-        if i < 0:
-            # Extension vers la gauche (ajout de symbol_vide en début)
-            self.cellules = [self.symbol_vide] * (-i) + self.cellules
-            self.decalage += i
-            i = 0
-        elif i >= len(self.cellules):
+    def symbole_lu(self):
+        if self.tête < 0:
+            # Extension vers la gauche
+            self.bande = ['□'] * (-self.tête) + self.bande
+            self.tête = 0
+        elif self.tête >= len(self.bande):
             # Extension vers la droite
-            self.cellules += [self.symbol_vide] * (i - len(self.cellules) + 1)
+            self.bande += ['□'] * (self.tête - len(self.bande) + 1)
 
-        self.cellules[i] = valeur
-
-    def __str__(self):
-        """
-        Représente la configuration sous forme de chaîne de caractères,
-        utile pour afficher facilement les états des cellules.
-
-        Returns:
-            str: Représentation textuelle de la configuration
-        """
-        return "".join(str(c) for c in self.cellules)
+        return self.bande[self.tête]
