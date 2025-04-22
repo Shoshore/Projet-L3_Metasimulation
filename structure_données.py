@@ -3,18 +3,18 @@ class Automate_cellulaire:
     Représente un automate cellulaire unidimensionnel.
 
     Attributs :
-        espace_etat (set): Ensemble des états possibles que peut prendre une cellule.
+        espace_etat (set): Ensemble des etats possibles que peut prendre une cellule.
         fonction_transition (dict): Fonction de transition sous forme de dictionnaire.
-            Clé : tuple (gauche, centre, droite), Valeur : nouvel état.
+            Clé : tuple (gauche, centre, droite), Valeur : nouvel etat.
         symbol_vide (str): Symbole utilisé pour les cellules hors de la configuration définie.
-        configuration (Configuration): Représente l'état courant de l'automate.
+        configuration (Configuration): Représente l'etat courant de l'automate.
 
     Méthodes :
-        prochaine_etat(gauche, centre, droite): Retourne le prochain état selon le triplet donné.
+        prochaine_etat(gauche, centre, droite): Retourne le prochain etat selon le triplet donné.
     """
 
     def __init__(self, espace_etat, fonction_transition, symbol_vide, configuration=None):
-        # Ensemble des états possibles (ex : {"0", "1", "2"})
+        # Ensemble des etats possibles (ex : {"0", "1", "2"})
         self.espace_etat = espace_etat
 
         # Fonction de transition définissant l'évolution locale de chaque cellule
@@ -28,15 +28,15 @@ class Automate_cellulaire:
 
     def prochaine_etat(self, gauche, centre, droite):
         """
-        Calcule le prochain état d'une cellule selon les états de ses voisines.
+        Calcule le prochain etat d'une cellule selon les etats de ses voisines.
 
         Args:
-            gauche (str): état de la cellule à gauche
-            centre (str): état actuel de la cellule
-            droite (str): état de la cellule à droite
+            gauche (str): etat de la cellule à gauche
+            centre (str): etat actuel de la cellule
+            droite (str): etat de la cellule à droite
 
         Returns:
-            str: nouvel état après application de la règle de transition,
+            str: nouvel etat après application de la règle de transition,
                  ou le symbol_vide si le triplet n'est pas défini.
         """
         transition = self.fonction_transition.get((gauche, centre, droite))
@@ -45,65 +45,129 @@ class Automate_cellulaire:
         return transition
 
 
-
-class MachineTuring:
+class Configuration:
     """
-    Représente une machine de Turing à un ruban.
+    Représente une configuration unidimensionnelle de cellules pour un automate cellulaire.
 
     Attributs :
-        états (set) : Ensemble des états possibles.
-        symboles (set) : Alphabet de travail (ex: {'0', '1', '□'}).
-        état_initial (str) : État de départ.
-        états_acceptation (set) : États d'acceptation.
-        transitions (dict) : Dictionnaire des transitions.
-            Clé : (état, symbole), Valeur : (nouvel état, symbole à écrire, direction 'G' ou 'D')
-        configuration (ConfigurationTuring) : Configuration actuelle (bande, tête, état).
+        cellules (list): Liste des etats des cellules.
+        symbol_vide (str): Symbole par défaut pour les cellules en dehors de la configuration connue.
+        decalage (int): Indice logique de la cellule d'indice 0 dans la liste `cellules`.
+
+    Méthodes :
+        get(index): Retourne l'etat de la cellule à l'indice donné (même hors des bornes).
+        set(index, valeur): Modifie ou étend la configuration pour affecter l'etat à l'indice donné.
+        __str__(): Retourne une représentation en chaîne des cellules (utile pour l'affichage).
     """
 
-    def __init__(self, états, symboles, état_initial, états_acceptation, transitions, configuration):
-        self.états = états
-        self.symboles = symboles
-        self.état_initial = état_initial
-        self.états_acceptation = états_acceptation
-        self.transitions = transitions  # { (etat, symbole): (etat_suivant, symbole_écrit, direction) }
-        self.configuration = configuration  # instance de ConfigurationTuring
+    def __init__(self, etat_initiale, symbol_vide):
+        # Liste des etats des cellules dans la configuration initiale (ex: ["0", "0", "1", "0"])
+        self.cellules = list(etat_initiale)
 
-    
+        # Symbole par défaut utilisé si on demande une cellule hors des bornes (ex: "0")
+        self.symbol_vide = symbol_vide
 
-class MachineTuring:
-    """
-    Représente une machine de Turing à une bande.
+        # decalage logique : correspond à l'indice réel de la première cellule
+        # Utile quand on veut étendre la configuration vers la gauche
+        self.decalage = 0
 
-    Attributs :
-        états (set) : Ensemble des états possibles (ex: {"q0", "q1", "qf"}).
-        alphabet (set) : Alphabet de travail (ex: {"0", "1", "□"}).
-        état_initial (str) : État de départ de la machine (ex: "q0").
-        état_final (str) : État d’acceptation/halting (ex: "qf").
-        transitions (dict) : Fonction de transition :
-            clé : (état, symbole_lu)
-            valeur : (nouvel_état, symbole_écrit, direction)
-        bande (list) : Contenu actuel de la bande.
-        tête (int) : Position actuelle de la tête de lecture/écriture.
-        état_courant (str) : État actuel de la machine.
-    """
+    def get(self, index):
+        """
+        Retourne l'etat de la cellule à une position donnée.
 
-    def __init__(self, états, alphabet, état_initial, état_final, transitions, bande_initiale):
-        self.états = états
-        self.alphabet = alphabet
-        self.état_initial = état_initial
-        self.état_final = état_final
-        self.transitions = transitions  # Dictionnaire : (état, symbole_lu) → (nouvel_état, symbole_écrit, direction)
-        self.bande = list(bande_initiale)  # Bande initiale sous forme de liste de symboles
-        self.tête = 0  # Position de départ
-        self.état_courant = état_initial
+        Si l'index est hors des limites de la configuration actuelle,
+        retourne le symbole vide (symbol_vide).
 
-    def symbole_lu(self):
-        if self.tête < 0:
-            # Extension vers la gauche
-            self.bande = ['□'] * (-self.tête) + self.bande
-            self.tête = 0
-        elif self.tête >= len(self.bande):
+        Args:
+            index (int): Position logique de la cellule
+
+        Returns:
+            str: etat de la cellule
+        """
+        i = index - self.decalage
+        if 0 <= i < len(self.cellules):
+            return self.cellules[i]
+        else:
+            return self.symbol_vide
+
+    def set(self, index, valeur):
+        """
+        Modifie la valeur de la cellule à l'indice donné.
+        Étend la configuration à gauche ou à droite si besoin.
+
+        Args:
+            index (int): Position logique de la cellule
+            valeur (str): Nouvel etat de la cellule
+        """
+        i = index - self.decalage
+
+        if i < 0:
+            # Extension vers la gauche (ajout de symbol_vide en début)
+            self.cellules = [self.symbol_vide] * (-i) + self.cellules
+            self.decalage += i
+            i = 0
+        elif i >= len(self.cellules):
             # Extension vers la droite
-            self.bande += ['□'] * (self.tête - len(self.bande) + 1)
+            self.cellules += [self.symbol_vide] * (i - len(self.cellules) + 1)
 
-        return self.bande[self.tête]
+        self.cellules[i] = valeur
+
+    def __str__(self):
+        """
+        Représente la configuration sous forme de chaîne de caractères,
+        utile pour afficher facilement les etats des cellules.
+
+        Returns:
+            str: Représentation textuelle de la configuration
+        """
+        return "".join(str(c) for c in self.cellules)
+
+
+class MachineTuring:
+    """
+    Représente une machine de Turing déterministe à un seul ruban.
+
+    Attributs :
+        etats (set of str) : L'ensemble des etats possibles de la machine.
+        symboles (set of str) : L'alphabet de travail utilisé par la machine (ex: {'0', '1', '□'}).
+        etat_initial (str) : L'etat de départ de la machine.
+        etats_acceptation (set of str) : L'ensemble des etats d'acceptation.
+        transitions (dict) : Fonction de transition de la machine.
+                             Clé : tuple (etat_actuel, symbole_lu)
+                             Valeur : tuple (etat_suivant, symbole_écrit, direction)
+                             La direction est soit 'G' (gauche) soit 'D' (droite).
+        configuration (ConfigurationTuring) : La configuration courante (bande, tete, etat).
+
+    Exemple de transition :
+        transitions = {
+            ('q0', '1'): ('q1', '□', 'D'),
+            ('q1', '0'): ('q_accept', '1', 'D')
+        }
+    """
+    def __init__(self, etats, symboles, etat_initial, etats_acceptation, transitions, configuration):
+        self.etats = etats
+        self.symboles = symboles
+        self.etat_initial = etat_initial
+        self.etats_acceptation = etats_acceptation
+        self.transitions = transitions
+        self.configuration = configuration
+
+
+class ConfigurationTuring:
+    """
+    Représente une configuration (instantané) de la machine de Turing.
+
+    Attributs :
+        bande (list of str) : La bande de la machine représentée comme une liste de symboles.
+                              Elle peut être étendue dynamiquement à gauche ou à droite.
+        tete (int) : Position actuelle de la tete de lecture/écriture sur la bande.
+        etat (str) : etat courant de la machine.
+
+    Exemple :
+        Pour une configuration avec bande = ['0', '1', '□'], tete = 1, etat = 'q0',
+        cela signifie que la tete lit le symbole '1' et que la machine est dans l'etat 'q0'.
+    """
+    def __init__(self, bande, tete, etat):
+        self.bande = bande
+        self.tete = tete
+        self.etat = etat

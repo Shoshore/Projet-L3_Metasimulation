@@ -23,8 +23,6 @@ def calcule_prochaine_configuration(automate):
     return nouvelle_configuration  # Retourne la nouvelle configuration
 
 
-
-
 def simulation(automate, pas_maximale=None, arret_sur_la_transition=None, arret_sur_un_stable=False):
     """
     Simule le comportement de l'automate cellulaire pendant un nombre défini d'étapes, 
@@ -65,3 +63,77 @@ def simulation(automate, pas_maximale=None, arret_sur_la_transition=None, arret_
                     return historique  # Retourne l'historique jusqu'à ce point
 
     return historique  # Retourne l'historique des configurations si la simulation ne s'arrête pas avant
+
+
+def pas_de_calcul(machine):
+    """
+    Effectue un pas de calcul de la machine de Turing.
+
+    Args:
+        machine (MachineTuring): La machine de Turing avec sa configuration actuelle.
+
+    Returns:
+        ConfigurationTuring or None: La nouvelle configuration après un pas de calcul,
+        ou None si aucune transition n'est possible.
+    """
+    config = machine.configuration
+    tete = config.tete
+    symbole_lu = config.bande[tete] if 0 <= tete < len(config.bande) else '□'
+    transition = machine.transitions.get((config.etat, symbole_lu))
+
+    if transition is None:
+        return None  # Pas de transition définie, arrêt
+
+    nouvel_etat, symbole_ecrit, direction = transition
+
+    # Écriture sur la bande
+    config.bande[tete] = symbole_ecrit
+
+    # Déplacement de la tête
+    if direction == 'D':
+        config.tete += 1
+        if config.tete >= len(config.bande):
+            config.bande.append('□')  # Étendre la bande à droite si besoin
+    elif direction == 'G':
+        if config.tete == 0:
+            config.bande.insert(0, '□')  # Étendre la bande à gauche
+        else:
+            config.tete -= 1
+
+    # Changement d'état
+    config.etat = nouvel_etat
+
+    return config
+
+
+def simuler(machine):
+    """
+    Simule l'exécution d'une machine de Turing jusqu'à acceptation ou rejet.
+
+    La machine s'arrête :
+    - si l'état courant appartient à l'ensemble des états d'acceptation (ACCEPT),
+    - ou si aucune transition n'est définie à partir de l'état courant et du symbole lu (REJECT).
+
+    Args:
+        machine (MachineTuring): La machine de Turing initialisée avec un mot d'entrée.
+
+    Returns:
+        str: "ACCEPT" si le mot est accepté, "REJECT" sinon.
+    """
+    etapes = 0
+    while True:
+        config = machine.configuration
+        print(f"{etapes:02d} : état={config.etat}, tête={config.tete}, bande={''.join(config.bande)}")
+
+        if config.etat in machine.etats_acceptation:
+            print("→ Mot accepté.")
+            return "ACCEPT"
+
+        transition = machine.transitions.get((config.etat, config.bande[config.tete] if 0 <= config.tete < len(config.bande) else '□'))
+        if transition is None:
+            print(f"→ Aucune transition trouvée pour (état={config.etat}, symbole={config.bande[config.tete]})")
+            print("→ Mot rejeté.")
+            return "REJECT"
+
+        pas_de_calcul(machine)
+        etapes += 1

@@ -1,4 +1,5 @@
-from structure_données import Automate_cellulaire, Configuration
+from structure_données import Automate_cellulaire, Configuration, MachineTuring, ConfigurationTuring
+
 
 def extension_paterne(paterne, espace_etat):
     """
@@ -65,3 +66,78 @@ def lecture_automate(chemin_acces, mot_entre, symbol_vide):
     automate.configuration = config
 
     return automate
+
+
+def lire_machine_turing(fichier: str, mot: str) -> MachineTuring:
+    """
+    Lit une machine de Turing depuis un fichier et initialise la configuration
+    avec le mot donné.
+
+    Le fichier peut contenir des commentaires commençant par #, pour spécifier :
+    - # initial: q0
+    - # accept: q_accept
+    - # reject: q_reject
+
+    Chaque transition est décrite sous la forme :
+    état_courant symbole_lu -> nouvel_état symbole_écrit direction
+    Exemple : q0 1 -> q1 0 R
+    """
+    transitions = {}
+    etat_initial = None
+    etats_accept = set()
+    etats_reject = set()
+
+    with open(fichier, "r") as f:
+        for ligne in f:
+            ligne = ligne.strip()
+            if not ligne or ligne.startswith("#"):
+                # Gérer les commentaires pour les infos supplémentaires
+                if "initial:" in ligne:
+                    etat_initial = ligne.split("initial:")[1].strip()
+                elif "accept:" in ligne:
+                    etats_accept.update(ligne.split("accept:")[1].strip().split())
+                elif "reject:" in ligne:
+                    etats_reject.update(ligne.split("reject:")[1].strip().split())
+                continue
+
+            # Parser une transition
+            if "->" in ligne:
+                gauche, droite = ligne.split("->")
+                etat_courant, symbole_lu = gauche.strip().split()
+                nouvel_etat, symbole_ecrit, direction = droite.strip().split()
+                transitions[(etat_courant, symbole_lu)] = (nouvel_etat, symbole_ecrit, direction)
+
+    if etat_initial is None:
+        raise ValueError("État initial non défini dans le fichier (ligne avec '# initial: ...')")
+
+    # Récupération de tous les états et symboles vus dans les transitions
+    etats = set()
+    symboles = set()
+    for (etat_courant, symbole_lu), (etat_suivant, symbole_ecrit, _) in transitions.items():
+        etats.add(etat_courant)
+        etats.add(etat_suivant)
+        symboles.add(symbole_lu)
+        symboles.add(symbole_ecrit)
+
+    # Ajouter le symbole blanc si pas déjà dedans
+    symboles.add('□')
+
+    # Créer la configuration initiale
+    config_init = ConfigurationTuring(
+        bande=list(mot) + ['□'],  # Ajout d'un symbole blanc à la fin de la bande
+        tete=0,
+        etat=etat_initial
+    )
+
+    # Créer la machine de Turing
+    machine = MachineTuring(
+        etats=etats,
+        symboles=symboles,
+        etat_initial=etat_initial,
+        etats_acceptation=etats_accept,
+        transitions=transitions,
+        configuration=config_init
+    )
+
+    return machine
+
