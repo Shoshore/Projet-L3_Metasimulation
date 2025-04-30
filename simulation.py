@@ -40,11 +40,12 @@ def simulation(automate, pas_maximale=None, arret_sur_la_transition=None, arret_
         list: Une liste contenant l'historique des configurations à chaque étape de la simulation.
     """
     historique = [automate.configuration]  # Liste pour stocker l'historique des configurations
-
+    print(f"00 : {automate.configuration}")  # Affiche la configuration initiale
     for step in range(1, pas_maximale + 1 if pas_maximale is not None else float('inf')):
         prev_config = automate.configuration  # Configuration précédente
         nouvelle_configuration = calcule_prochaine_configuration(automate)  # Calcule la prochaine configuration
         historique.append(nouvelle_configuration)  # Ajoute la nouvelle configuration à l'historique
+        print(f"{step:02d} : {nouvelle_configuration}")
 
         # Vérifie si la configuration est stable (si elle ne change pas)
         if arret_sur_un_stable and str(prev_config) == str(nouvelle_configuration):
