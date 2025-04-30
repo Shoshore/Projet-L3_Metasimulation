@@ -141,3 +141,57 @@ def lire_machine_turing(fichier: str, mot: str) -> MachineTuring:
 
     return machine
 
+
+def construire_automate_depuis_turing(machine_turing):
+    espace_etat = set()
+    fonction_transition = {}
+    symbol_vide = '□'
+
+    # Ajout des états de cellules possibles
+    for symbole in machine_turing.symboles:
+        espace_etat.add(symbole)
+        for etat in machine_turing.etats:
+            espace_etat.add(f"{symbole}_{etat}")
+
+    # Construction des règles de transition
+    for (etat, symbole_lu), (etat_suiv, symbole_ecrit, direction) in machine_turing.transitions.items():
+        # Ignore les transitions des états d'acceptation
+        if etat in machine_turing.etats_acceptation:
+            continue  # Ne pas traiter les transitions des états d'acceptation
+
+        for gauche in espace_etat:
+            for centre in espace_etat:
+                for droite in espace_etat:
+                    if centre == f"{symbole_lu}_{etat}":
+                        if direction == 'D':
+                            nouvelle_centre = symbole_ecrit
+                            nouvelle_droite = f"{droite}_{etat_suiv}" if droite in machine_turing.symboles else f"{symbol_vide}_{etat_suiv}"
+                            fonction_transition[(gauche, centre, droite)] = nouvelle_centre
+                        elif direction == 'G':
+                            nouvelle_centre = symbole_ecrit
+                            nouvelle_gauche = f"{gauche}_{etat_suiv}" if gauche in machine_turing.symboles else f"{symbol_vide}_{etat_suiv}"
+                            fonction_transition[(gauche, centre, droite)] = nouvelle_centre
+    # Stabilisation des états d'acceptation
+    for etat_terminal in machine_turing.etats_acceptation:
+        for symbole in list(machine_turing.symboles) + [symbol_vide]:  # Conversion du set en list avant concaténation
+            etat_cellule = f"{symbole}_{etat_terminal}"
+            for g in espace_etat:
+                for d in espace_etat:
+                    fonction_transition[(g, etat_cellule, d)] = symbole
+
+    # Initialisation de la configuration de l'automate à partir de la configuration de la MT
+    cellule_etats = []
+    for i, symbole in enumerate(machine_turing.configuration.bande):
+        if i == machine_turing.configuration.tete:
+            cellule_etats.append(f"{symbole}_{machine_turing.configuration.etat}")
+        else:
+            cellule_etats.append(symbole)
+
+    configuration_initiale = Configuration(cellule_etats, symbol_vide)
+
+    return Automate_cellulaire(
+        espace_etat=espace_etat,
+        fonction_transition=fonction_transition,
+        symbol_vide=symbol_vide,
+        configuration=configuration_initiale
+    )

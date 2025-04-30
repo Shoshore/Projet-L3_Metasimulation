@@ -6,16 +6,18 @@ def calcule_prochaine_configuration(automate):
     Calcule la prochaine configuration de l'automate en appliquant les règles de transition
     sur chaque cellule de l'automate, en tenant compte des cellules voisines (gauche et droite).
     """
-
     ancienne_configuration = automate.configuration  # Récupère la configuration actuelle
     nouvelle_configuration = Configuration([], automate.symbol_vide)  # Crée une nouvelle configuration vide
-
-    # Parcours des cellules de la configuration actuelle sans ajouter de bord
+    
+    # Parcours des cellules de la configuration actuelle
     for i in range(ancienne_configuration.decalage, ancienne_configuration.decalage + len(ancienne_configuration.cellules)):
-        gauche = ancienne_configuration.get(i - 1)  # État de la cellule à gauche
-        centre = ancienne_configuration.get(i)    # État de la cellule actuelle
-        droite = ancienne_configuration.get(i + 1) # État de la cellule à droite
-        nouvelle_etat = automate.prochaine_etat(gauche, centre, droite)  # Calcul du nouvel état basé sur la transition
+        # Récupère les cellules gauche, centre, droite
+        gauche = ancienne_configuration.get(i - 1) if i > 0 else automate.symbol_vide
+        centre = ancienne_configuration.get(i)
+        droite = ancienne_configuration.get(i + 1) if i < len(ancienne_configuration.cellules) - 1 else automate.symbol_vide
+        
+        # Calcule le nouvel état de la cellule en fonction de la transition
+        nouvelle_etat = automate.prochaine_etat(gauche, centre, droite)
         nouvelle_configuration.set(i, nouvelle_etat)  # Mise à jour de la nouvelle configuration avec le nouvel état
 
     # Met à jour la configuration de l'automate avec la nouvelle configuration calculée
@@ -28,14 +30,10 @@ def simulation(automate, pas_maximale=None, arret_sur_la_transition=None, arret_
     Simule le comportement de l'automate cellulaire pendant un nombre défini d'étapes, 
     ou jusqu'à ce que certaines conditions d'arrêt soient remplies (transition spécifique ou configuration stable).
 
-    À chaque étape, l'automate calcule la prochaine configuration et l'ajoute à l'historique. 
-    Si l'option `arret_sur_un_stable` est activée, la simulation s'arrête lorsque la configuration devient stable (c'est-à-dire qu'elle ne change plus). 
-    Si l'option `arret_sur_la_transition` est spécifiée, la simulation s'arrête dès qu'une transition spécifique est détectée.
-
     Args:
         automate (Automate_cellulaire): L'automate à simuler.
         pas_maximale (int, optional): Nombre maximal d'étapes avant d'arrêter la simulation. Si None, la simulation continue indéfiniment.
-        arret_sur_la_transition (tuple, optional): Si une transition spécifique est détectée, la simulation s'arrête. Le format de la transition est une triplette (gauche, centre, droite).
+        arret_sur_la_transition (tuple, optional): Si une transition spécifique est détectée, la simulation s'arrête.
         arret_sur_un_stable (bool, optional): Si True, la simulation s'arrête lorsque la configuration devient stable.
 
     Returns:
@@ -43,7 +41,6 @@ def simulation(automate, pas_maximale=None, arret_sur_la_transition=None, arret_
     """
     historique = [automate.configuration]  # Liste pour stocker l'historique des configurations
 
-    # On boucle jusqu'à atteindre le nombre d'étapes ou une condition d'arrêt
     for step in range(1, pas_maximale + 1 if pas_maximale is not None else float('inf')):
         prev_config = automate.configuration  # Configuration précédente
         nouvelle_configuration = calcule_prochaine_configuration(automate)  # Calcule la prochaine configuration
@@ -109,31 +106,24 @@ def pas_de_calcul(machine):
 def simuler(machine):
     """
     Simule l'exécution d'une machine de Turing jusqu'à acceptation ou rejet.
-
-    La machine s'arrête :
-    - si l'état courant appartient à l'ensemble des états d'acceptation (ACCEPT),
-    - ou si aucune transition n'est définie à partir de l'état courant et du symbole lu (REJECT).
-
-    Args:
-        machine (MachineTuring): La machine de Turing initialisée avec un mot d'entrée.
-
-    Returns:
-        str: "ACCEPT" si le mot est accepté, "REJECT" sinon.
     """
     etapes = 0
+    historique = []  # Crée une liste pour stocker les étapes de la simulation
     while True:
         config = machine.configuration
+        historique.append(config)  # Ajoute la configuration actuelle à l'historique
+
         print(f"{etapes:02d} : état={config.etat}, tête={config.tete}, bande={''.join(config.bande)}")
 
         if config.etat in machine.etats_acceptation:
             print("→ Mot accepté.")
-            return "ACCEPT"
+            return historique  # Retourne l'historique des configurations jusqu'à ce point
 
         transition = machine.transitions.get((config.etat, config.bande[config.tete] if 0 <= config.tete < len(config.bande) else '□'))
         if transition is None:
             print(f"→ Aucune transition trouvée pour (état={config.etat}, symbole={config.bande[config.tete]})")
             print("→ Mot rejeté.")
-            return "REJECT"
+            return historique  # Retourne l'historique des configurations si aucun transition n'est trouvé
 
         pas_de_calcul(machine)
         etapes += 1

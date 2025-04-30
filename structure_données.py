@@ -28,21 +28,13 @@ class Automate_cellulaire:
 
     def prochaine_etat(self, gauche, centre, droite):
         """
-        Calcule le prochain etat d'une cellule selon les etats de ses voisines.
-
-        Args:
-            gauche (str): etat de la cellule à gauche
-            centre (str): etat actuel de la cellule
-            droite (str): etat de la cellule à droite
-
-        Returns:
-            str: nouvel etat après application de la règle de transition,
-                 ou le symbol_vide si le triplet n'est pas défini.
+        Retourne le nouvel état de la cellule au centre en fonction des voisins
+        et de la règle de transition de l'automate cellulaire.
         """
-        transition = self.fonction_transition.get((gauche, centre, droite))
-        if transition is None:
-            return self.symbol_vide  # Retourne symbol_vide si la transition n'est pas définie
-        return transition
+        # Recherche si une transition est définie pour la combinaison (gauche, centre, droite)
+        if (gauche, centre, droite) in self.fonction_transition:
+            return self.fonction_transition[(gauche, centre, droite)]
+        return centre  # Si aucune règle définie, on ne change pas le centre (évolution par défaut)
 
 
 class Configuration:

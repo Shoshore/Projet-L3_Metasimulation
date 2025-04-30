@@ -2,8 +2,10 @@
 # accept: q_accept
 # reject: q_reject
 
-q0 0 -> q0 0 D
-q0 1 -> q_accept 1 D
+q0 0 -> q1 0 D
+q0 1 -> q0 1 D
+q0 □ -> q_accept □ D
 
-q_accept □ -> q_accept □ D
-q_reject □ -> q_reject □ D
+q1 0 -> q0 0 D
+q1 1 -> q1 1 D
+q1 □ -> q_reject □ D
