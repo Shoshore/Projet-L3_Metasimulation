@@ -143,52 +143,74 @@ def lire_machine_turing(fichier: str, mot: str) -> MachineTuring:
 
 
 def construire_automate_depuis_turing(machine_turing):
-    espace_etat = set()
-    fonction_transition = {}
-    symbol_vide = '□'
+    """
+    Cette fonction construit un automate cellulaire à partir d'une machine de Turing donnée.
+    L'automate cellulaire simule le comportement de la machine de Turing en suivant les règles 
+    de transition définies pour cette machine.
 
-    # Ajout des états de cellules possibles
+    Args:
+        machine_turing (MachineTuring): Une instance de la machine de Turing à simuler.
+    
+    Returns:
+        Automate_cellulaire: Une instance d'un automate cellulaire simulant la machine de Turing.
+    """
+
+    # Initialisation de l'espace d'états et de la fonction de transition
+    espace_etat = set()  # Ensemble pour stocker les états des cellules (symbole_etat)
+    fonction_transition = {}  # Dictionnaire pour les règles de transition
+    symbol_vide = '□'  # Le symbole vide de la bande de la machine de Turing
+
+    # Ajout des états de cellules possibles dans l'espace d'état
+    # Chaque cellule peut être dans un état "symbole_état" où "état" est l'état de la machine de Turing
     for symbole in machine_turing.symboles:
-        espace_etat.add(symbole)
+        espace_etat.add(symbole)  # Ajout du symbole seul (par exemple '0', '1', etc.)
         for etat in machine_turing.etats:
-            espace_etat.add(f"{symbole}_{etat}")
+            espace_etat.add(f"{symbole}_{etat}")  # Ajout des cellules combinées avec un état (par exemple '0_q0')
 
-    # Construction des règles de transition
+    # Construction des règles de transition de la machine de Turing
     for (etat, symbole_lu), (etat_suiv, symbole_ecrit, direction) in machine_turing.transitions.items():
-        # Ignore les transitions des états d'acceptation
+        # Si l'état actuel est un état d'acceptation, on ignore les transitions pour cet état
         if etat in machine_turing.etats_acceptation:
-            continue  # Ne pas traiter les transitions des états d'acceptation
+            continue  # On ne traite pas les transitions des états d'acceptation
 
+        # On parcourt toutes les configurations possibles pour les cellules voisines (gauche, centre, droite)
         for gauche in espace_etat:
             for centre in espace_etat:
                 for droite in espace_etat:
-                    if centre == f"{symbole_lu}_{etat}":
-                        if direction == 'D':
-                            nouvelle_centre = symbole_ecrit
+                    if centre == f"{symbole_lu}_{etat}":  # Si la cellule du centre correspond au symbole lu et à l'état
+                        if direction == 'D':  # Si la direction de la tête est à droite
+                            nouvelle_centre = symbole_ecrit  # Le symbole écrit dans la cellule centrale
+                            # La cellule droite devient l'état suivant (en fonction de l'état et du symbole)
                             nouvelle_droite = f"{droite}_{etat_suiv}" if droite in machine_turing.symboles else f"{symbol_vide}_{etat_suiv}"
-                            fonction_transition[(gauche, centre, droite)] = nouvelle_centre
-                        elif direction == 'G':
-                            nouvelle_centre = symbole_ecrit
+                            fonction_transition[(gauche, centre, droite)] = nouvelle_centre  # Enregistrement de la transition
+                        elif direction == 'G':  # Si la direction de la tête est à gauche
+                            nouvelle_centre = symbole_ecrit  # Le symbole écrit dans la cellule centrale
+                            # La cellule gauche devient l'état suivant (en fonction de l'état et du symbole)
                             nouvelle_gauche = f"{gauche}_{etat_suiv}" if gauche in machine_turing.symboles else f"{symbol_vide}_{etat_suiv}"
-                            fonction_transition[(gauche, centre, droite)] = nouvelle_centre
-    # Stabilisation des états d'acceptation
+                            fonction_transition[(gauche, centre, droite)] = nouvelle_centre  # Enregistrement de la transition
+
+    # Stabilisation des états d'acceptation : lorsqu'un état d'acceptation est atteint,
+    # la machine de Turing reste dans cet état et écrit le même symbole
     for etat_terminal in machine_turing.etats_acceptation:
-        for symbole in list(machine_turing.symboles) + [symbol_vide]:  # Conversion du set en list avant concaténation
-            etat_cellule = f"{symbole}_{etat_terminal}"
+        for symbole in list(machine_turing.symboles) + [symbol_vide]:  # On parcourt les symboles possibles
+            etat_cellule = f"{symbole}_{etat_terminal}"  # Définition de l'état final
             for g in espace_etat:
                 for d in espace_etat:
-                    fonction_transition[(g, etat_cellule, d)] = symbole
+                    fonction_transition[(g, etat_cellule, d)] = symbole  # Les transitions sont stabilisées
 
-    # Initialisation de la configuration de l'automate à partir de la configuration de la MT
-    cellule_etats = []
+    # Initialisation de la configuration de l'automate à partir de la configuration de la machine de Turing
+    cellule_etats = []  # Liste pour stocker les états des cellules de l'automate
     for i, symbole in enumerate(machine_turing.configuration.bande):
+        # Si la position de la tête correspond à l'indice, on associe l'état de la machine
         if i == machine_turing.configuration.tete:
             cellule_etats.append(f"{symbole}_{machine_turing.configuration.etat}")
         else:
-            cellule_etats.append(symbole)
+            cellule_etats.append(symbole)  # Sinon, on ajoute simplement le symbole de la bande
 
+    # Création de la configuration initiale de l'automate
     configuration_initiale = Configuration(cellule_etats, symbol_vide)
 
+    # Retour de l'automate cellulaire avec l'espace d'état, la fonction de transition et la configuration initiale
     return Automate_cellulaire(
         espace_etat=espace_etat,
         fonction_transition=fonction_transition,
