@@ -5,7 +5,22 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from structure_données import Automate_cellulaire, Configuration, MachineTuring, ConfigurationTuring
 from lecture_fichier import lecture_automate, lire_machine_turing, construire_automate_depuis_turing
 from simulation import simulation, simuler, pas_de_calcul, calcule_prochaine_configuration
-reponse_question_14 = ""
+
+
+reponse_question_14 = """Intuitivement, avec la question 5, on comprend que ce problème est indécidable, 
+car un automate cellulaire ne sait pas quand s'arrêter. Regardons cela plus en détail :
+\n- Un automate cellulaire est Turing-complet, car il peut simuler une machine de Turing.
+\n- Demander si un symbole s apparaît dans une configuration revient à demander si un état particulier est 
+atteint, ce qui revient à se demander si une machine de Turing entre dans un état spécifique.
+\n- Le problème n'est pas trivial, car :
+\n\n - Il existe des automates cellulaires qui produisent une configuration contenant s,
+\n\n - Et d'autres qui ne produiront jamais s.
+\n- Puisque ce n’est ni toujours vrai ni toujours faux, c’est un problème non trivial.
+\n- On peut donc appliquer le théorème de Rice, qui nous dit que tout problème non trivial sur le comportement
+d’un programme Turing-complet est indécidable.
+\nConclusion : le problème HALTING-CELLULAR-AUTOMATON est indécidable."""
+
+
 fonction_question = {
     1: Automate_cellulaire,
     2: Configuration,
