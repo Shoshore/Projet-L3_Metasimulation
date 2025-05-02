@@ -179,12 +179,10 @@ def construire_automate_depuis_turing(machine_turing):
                         if direction == 'D':  # Si la direction de la tête est à droite
                             nouvelle_centre = symbole_ecrit  # Le symbole écrit dans la cellule centrale
                             # La cellule droite devient l'état suivant (en fonction de l'état et du symbole)
-                            nouvelle_droite = f"{droite}_{etat_suiv}" if droite in machine_turing.symboles else f"{symbol_vide}_{etat_suiv}"
                             fonction_transition[(gauche, centre, droite)] = nouvelle_centre  # Enregistrement de la transition
                         elif direction == 'G':  # Si la direction de la tête est à gauche
                             nouvelle_centre = symbole_ecrit  # Le symbole écrit dans la cellule centrale
                             # La cellule gauche devient l'état suivant (en fonction de l'état et du symbole)
-                            nouvelle_gauche = f"{gauche}_{etat_suiv}" if gauche in machine_turing.symboles else f"{symbol_vide}_{etat_suiv}"
                             fonction_transition[(gauche, centre, droite)] = nouvelle_centre  # Enregistrement de la transition
 
     # Stabilisation des états d'acceptation : lorsqu'un état d'acceptation est atteint,
