@@ -10,7 +10,7 @@ def calcule_prochaine_configuration(automate):
     nouvelle_configuration = Configuration([], automate.symbol_vide)  # Crée une nouvelle configuration vide
     
     # Parcours des cellules de la configuration actuelle
-    for i in range(ancienne_configuration.decalage, ancienne_configuration.decalage + len(ancienne_configuration.cellules)):
+    for i in range(ancienne_configuration.decalage - 1, ancienne_configuration.decalage + len(ancienne_configuration.cellules) + 1):
         # Récupère les cellules gauche, centre, droite
         gauche = ancienne_configuration.get(i - 1) if i > 0 else automate.symbol_vide
         centre = ancienne_configuration.get(i)
@@ -93,7 +93,7 @@ def pas_de_calcul(machine):
         if config.tete >= len(config.bande):
             config.bande.append('□')  # Étendre la bande à droite si besoin
     elif direction == 'G':
-        if config.tete == 0:
+        if config.tete <= 0:
             config.bande.insert(0, '□')  # Étendre la bande à gauche
         else:
             config.tete -= 1
